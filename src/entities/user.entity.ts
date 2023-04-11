@@ -22,10 +22,6 @@ export class User extends Base {
   @Exclude()
   password: string
 
-  @Column({ nullable: true, default: null })
-  @Exclude()
-  refresh_token: string
-
   @OneToMany(() => Quote, (quote) => quote.author)
   quote: Quote[]
 
