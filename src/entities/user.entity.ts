@@ -31,8 +31,4 @@ export class User extends Base {
 
   @OneToMany(() => Vote, (vote) => vote.user)
   vote: Vote[]
-
-  // @ManyToOne(() => Role, { onDelete: 'SET NULL' })
-  // @JoinColumn({ name: 'role_id' })
-  // role: Role | null
 }
