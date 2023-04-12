@@ -5,6 +5,7 @@ import Logging from 'library/Logging'
 import { UsersService } from 'modules/users/users.service'
 import { compareHash, hash } from 'utils/bcrypt'
 import { RegisterUserDto } from './dto/register-user.dto'
+import { JwtPayload } from 'interfaces/JwtPayload.interface'
 
 @Injectable()
 export class AuthService {
@@ -36,13 +37,18 @@ export class AuthService {
     return this.jwtService.signAsync({ sub: user.id, name: user.email })
   }
 
-  async user(cookie: string): Promise<User> {
-    const data = await this.jwtService.verifyAsync(cookie)
-    return this.usersService.findById(data['id'])
-  }
+  // async user(cookie: string): Promise<User> {
+  //   Logging.warn("do sem pride")
+  //   Logging.info(cookie)
+  //   const data = await this.jwtService.verifyAsync(cookie)
+  //   return this.usersService.findById(data['id'])
+  // }
 
-  //   async getUserId(request: Request): Promise<string> {
-  //     const user = request.user as User
-  //     return user.id
-  //   }
+  async user(cookie: string): Promise<User> {
+    const decoded: JwtPayload = this.jwtService.decode(cookie) as JwtPayload
+    // const decoded: any = this.jwtService.decode(cookie) as any;
+    // console.log(decoded);
+
+    return this.usersService.findById(decoded.sub)
+  }
 }

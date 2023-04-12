@@ -10,7 +10,7 @@ export class Quote extends Base {
   text: string
 
   @ManyToOne(() => User, (user) => user.quote)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'authorId' })
   author: User
 
   @OneToMany(() => Vote, (vote) => vote.quote)
