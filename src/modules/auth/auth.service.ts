@@ -2,18 +2,18 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { User } from 'entities/user.entity'
 import Logging from 'library/Logging'
-import { UsersService } from 'modules/users/users.service'
+import { MeService } from 'modules/me/me.service'
 import { compareHash, hash } from 'utils/bcrypt'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { JwtPayload } from 'interfaces/JwtPayload.interface'
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService, private jwtService: JwtService) {}
+  constructor(private meService: MeService, private jwtService: JwtService) {}
 
   async validateUser(email: string, password: string): Promise<User> {
     Logging.info('Validating user...')
-    const user = await this.usersService.findBy({ email: email })
+    const user = await this.meService.findBy({ email: email })
     if (!user) {
       throw new BadRequestException('Invalida credentials')
     }
@@ -27,7 +27,7 @@ export class AuthService {
 
   async register(registerUserDto: RegisterUserDto): Promise<User> {
     const hashedPassword: string = await hash(registerUserDto.password)
-    return await this.usersService.create({
+    return await this.meService.create({
       ...registerUserDto,
       password: hashedPassword,
     })
@@ -41,7 +41,7 @@ export class AuthService {
   //   Logging.warn("do sem pride")
   //   Logging.info(cookie)
   //   const data = await this.jwtService.verifyAsync(cookie)
-  //   return this.usersService.findById(data['id'])
+  //   return this.meService.findById(data['id'])
   // }
 
   async user(cookie: string): Promise<User> {
@@ -49,6 +49,6 @@ export class AuthService {
     // const decoded: any = this.jwtService.decode(cookie) as any;
     // console.log(decoded);
 
-    return this.usersService.findById(decoded.sub)
+    return this.meService.findById(decoded.sub)
   }
 }

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
-import { UsersModule } from 'modules/users/users.module'
+import { MeModule } from 'modules/me/me.module'
 import { PassportModule } from '@nestjs/passport'
 import { JwtModule } from '@nestjs/jwt'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -12,7 +12,7 @@ import { APP_GUARD } from '@nestjs/core'
 
 @Module({
   imports: [
-    UsersModule,
+    MeModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
