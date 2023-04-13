@@ -24,33 +24,64 @@ export class VoteService extends AbstractService {
       const allVotes = (await this.findAll(['user', 'quote'])) as Vote[]
       const user = await this.authService.user(cookie)
       const quote = await this.quoteService.findById(quoteId, ['author'])
+      // console.log(quote);
+      // console.log(user);
+      // console.log("---------------------------------");
+      // console.log(quote.author);
+
       const newVote = this.voteRepository.create({ upDown, user, quote })
       // console.log(allVotes);
+      if (quote.author.id === user.id) {
+        throw new BadRequestException('Cant vote for your quote')
+      }
 
-      allVotes.map((val) => {
-        if (val.user.id === user.id && val.quote.id === quoteId) {
-          //cheks if user already voted
-          if (val.upDown === upDown) {
-            throw new BadRequestException('User already voted for this quote')
-          } else {
-            //if ge changed the vote
-            this.voteRepository.update(val.id, newVote)
-            Logging.warn(`Vote changed to: ${upDown}`)
-            // return quote
-          }
+      const existingVote = allVotes.find((val) => val.user.id === user.id && val.quote.id === quoteId)
+
+      if (existingVote) {
+        //cheks if user already voted
+        if (existingVote.upDown === upDown) {
+          throw new BadRequestException('User already voted for this quote')
         } else {
-          this.voteRepository.save(newVote)
+          //if ge changed the vote
+          this.voteRepository.update(existingVote.id, newVote)
+          Logging.warn(`Vote changed to: ${upDown}`)
+          return quote
         }
-      })
+      }
 
       // console.log(cookie);
       // console.log(user);
       // console.log(newVote);
-
+      // console.log("SPET USTVAR NOUGA");
+      this.voteRepository.save(newVote)
       return quote
     } catch (error) {
       Logging.error(error)
-      throw new BadRequestException('something went wrong while voting up')
+      throw new BadRequestException('something went wrong while voting')
+    }
+  }
+
+  async countVotes(quoteId: string): Promise<number> {
+    try {
+      const allVotes = (await this.findAll(['user', 'quote'])) as Vote[]
+      var number: number = 0
+      // console.log(allVotes);
+
+      allVotes.map((val) => {
+        if (val.quote.id === quoteId) {
+          //all votes for quote
+          if (val.upDown) {
+            number++
+          } else {
+            number--
+          }
+        }
+      })
+
+      return number
+    } catch (error) {
+      Logging.error(error)
+      throw new BadRequestException('something went wrong while counting votes')
     }
   }
 }

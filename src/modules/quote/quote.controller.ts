@@ -30,15 +30,29 @@ export class QuoteController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<Quote[]> {
-    return this.quoteService.findAll(['author'])
+  async findAll(): Promise<{ quote: Quote; votes: number }[]> {
+    const allQuotes = await this.quoteService.findAll(['author'])
+
+    const quoteWithVotes = await Promise.all(
+      allQuotes.map(async (quote) => {
+        const votes = await this.voteService.countVotes(quote.id)
+        return { quote, votes }
+      }),
+    )
+    quoteWithVotes.sort((a, b) => b.votes - a.votes)
+
+    return quoteWithVotes
   }
 
   @Public()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string): Promise<Quote> {
-    return this.quoteService.findById(id, ['author'])
+  async findOne(@Param('id') id: string): Promise<{ quote: Quote; voteNum: number }> {
+    // console.log(await this.voteService.countVotes(id));
+    const quote = await this.quoteService.findById(id, ['author'])
+    const voteNum = await this.voteService.countVotes(id)
+
+    return { quote, voteNum }
   }
 
   @Post()
