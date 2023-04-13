@@ -5,20 +5,14 @@ import { Quote } from './quote.entity'
 
 @Entity()
 export class Vote extends Base {
-  @PrimaryColumn()
-  userId: number
-
-  @PrimaryColumn()
-  quoteId: number
-
   @Column()
   upDown: boolean
 
   @ManyToOne(() => User, (user) => user.vote)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User //mogoče array?
 
   @ManyToOne(() => Quote, (quote) => quote.vote)
-  @JoinColumn({ name: 'quote_id' })
+  @JoinColumn({ name: 'quoteId' })
   quote: Quote //mogoče array?
 }
