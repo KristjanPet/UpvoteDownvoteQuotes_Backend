@@ -55,14 +55,14 @@ export class QuoteController {
     return { quote, voteNum }
   }
 
-  @Post()
-  @HttpCode(HttpStatus.OK)
-  async create(@Body() createQuoteDto: CreateQuoteDto, @Req() req: Request): Promise<Quote> {
-    // console.log(req.cookies['access_token']);
+  // @Post()
+  // @HttpCode(HttpStatus.OK)
+  // async create(@Body() createQuoteDto: CreateQuoteDto, @Req() req: Request): Promise<Quote> {
+  //   // console.log(req.cookies['access_token']);
 
-    const cookie = req.cookies['access_token']
-    return this.quoteService.create(createQuoteDto, cookie)
-  }
+  //   const cookie = req.cookies['access_token']
+  //   return this.quoteService.create(createQuoteDto, cookie)
+  // }
 
   @Post(':id/upvote')
   @HttpCode(HttpStatus.OK)

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, forwardRef } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { User } from 'entities/user.entity'
 import Logging from 'library/Logging'
@@ -9,7 +9,11 @@ import { JwtPayload } from 'interfaces/JwtPayload.interface'
 
 @Injectable()
 export class AuthService {
-  constructor(private meService: MeService, private jwtService: JwtService) {}
+  constructor(
+    @Inject(forwardRef(() => MeService))
+    private meService: MeService,
+    private jwtService: JwtService,
+  ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
     Logging.info('Validating user...')

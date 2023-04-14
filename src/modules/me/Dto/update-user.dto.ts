@@ -2,15 +2,15 @@ import { IsNotEmpty, IsOptional, IsEmail, Matches, ValidateIf } from 'class-vali
 import { Match } from 'decorators/match.decorator'
 
 export class UpdateUserDto {
-  @IsOptional()
-  first_name?: string
+  // @IsOptional()
+  // first_name?: string
 
-  @IsOptional()
-  last_name?: string
+  // @IsOptional()
+  // last_name?: string
 
-  @IsOptional()
-  @IsEmail()
-  email?: string
+  // @IsOptional()
+  // @IsEmail()
+  // email?: string
 
   @IsOptional()
   avatar?: string

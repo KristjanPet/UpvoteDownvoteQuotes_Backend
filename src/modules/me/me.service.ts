@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, forwardRef } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'entities/user.entity'
 import { AbstractService } from 'modules/common/abstract.service'
@@ -8,10 +8,15 @@ import Logging from 'library/Logging'
 import { UpdateUserDto } from './Dto/update-user.dto'
 import { PostgresErrorCode } from 'helpers/postgresErrorCode.enum'
 import { compareHash, hash } from 'utils/bcrypt'
+import { AuthService } from 'modules/auth/auth.service'
 
 @Injectable()
 export class MeService extends AbstractService {
-  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {
+  constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    // @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+  ) {
     super(userRepository)
   }
 
@@ -29,12 +34,10 @@ export class MeService extends AbstractService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = (await this.findById(id)) as User
-    const { email, password, confirm_password, ...data } = updateUserDto
-    if (user.email !== email && email) {
-      user.email = email
-    }
+  async update(cookie: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = (await this.authService.user(cookie)) as User
+    const { password, confirm_password, ...data } = updateUserDto
+
     if (password && confirm_password) {
       if (password !== confirm_password) {
         throw new BadRequestException('Passwords do not match')
@@ -45,10 +48,6 @@ export class MeService extends AbstractService {
       user.password = await hash(password)
     }
 
-    // if (role_id) {
-    //   user.role = { ...user.role, id: role_id }
-    // }
-
     try {
       Object.entries(data).map((entry) => {
         user[entry[0]] = entry[1]
@@ -57,9 +56,6 @@ export class MeService extends AbstractService {
       return this.userRepository.save(user)
     } catch (error) {
       Logging.error(error)
-      if (error?.code === PostgresErrorCode.UniqueViolation) {
-        throw new BadRequestException('email already used')
-      }
       throw new InternalServerErrorException('something went wrong updating user')
     }
   }
