@@ -18,7 +18,9 @@ import { JwtAuthGuard } from 'modules/auth/guards/jwt.guard'
 import { Public } from 'decorators/public.decorator'
 import { Request, Response } from 'express'
 import { VoteService } from 'modules/vote/vote.service'
+import { ApiBadRequestResponse, ApiCreatedResponse, ApiTags } from '@nestjs/swagger/dist/index'
 
+@ApiTags('Quotes')
 @Controller('quotes')
 export class QuoteController {
   constructor(
@@ -27,6 +29,8 @@ export class QuoteController {
     private readonly voteService: VoteService,
   ) {}
 
+  @ApiCreatedResponse({ description: 'List all quotes with votes.' })
+  @ApiBadRequestResponse({ description: 'Error for list of quotes' })
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -44,6 +48,8 @@ export class QuoteController {
     return quoteWithVotes
   }
 
+  @ApiCreatedResponse({ description: 'Quote by id.' })
+  @ApiBadRequestResponse({ description: 'Error for quote by id' })
   @Public()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
@@ -55,15 +61,8 @@ export class QuoteController {
     return { quote, voteNum }
   }
 
-  // @Post()
-  // @HttpCode(HttpStatus.OK)
-  // async create(@Body() createQuoteDto: CreateQuoteDto, @Req() req: Request): Promise<Quote> {
-  //   // console.log(req.cookies['access_token']);
-
-  //   const cookie = req.cookies['access_token']
-  //   return this.quoteService.create(createQuoteDto, cookie)
-  // }
-
+  @ApiCreatedResponse({ description: 'Up vote quote by id.' })
+  @ApiBadRequestResponse({ description: 'Error up voting quote' })
   @Post(':id/upvote')
   @HttpCode(HttpStatus.OK)
   async upVote(@Param('id') id: string, @Req() req: Request): Promise<Quote> {
@@ -73,6 +72,8 @@ export class QuoteController {
     return this.voteService.vote(id, cookie, true)
   }
 
+  @ApiCreatedResponse({ description: 'Down vote quote by id.' })
+  @ApiBadRequestResponse({ description: 'Error down voting quote' })
   @Post(':id/downvote')
   @HttpCode(HttpStatus.OK)
   async downVote(@Param('id') id: string, @Req() req: Request): Promise<Quote> {
