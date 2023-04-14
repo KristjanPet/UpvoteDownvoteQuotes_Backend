@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Quote } from 'entities/quote.entity'
 import { AbstractService } from 'modules/common/abstract.service'
@@ -18,13 +18,11 @@ export class QuoteService extends AbstractService {
 
   async create(createQuoteDto: CreateQuoteDto, cookie: string): Promise<Quote> {
     try {
-      const newquote = this.quoteRepository.create({ ...createQuoteDto })
       // console.log(cookie);
-
       const user = await this.authService.user(cookie)
       // console.log(user);
 
-      newquote.author = user
+      const newquote = this.quoteRepository.create({ ...createQuoteDto, author: user })
       return this.quoteRepository.save(newquote)
     } catch (error) {
       Logging.error(error)

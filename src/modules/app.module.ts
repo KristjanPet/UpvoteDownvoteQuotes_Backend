@@ -6,6 +6,7 @@ import { LoggerMiddleware } from 'middleware/logger.middleware'
 import { MeModule } from './me/me.module'
 import { AuthModule } from './auth/auth.module'
 import { QuoteModule } from './quote/quote.module'
+import { VoteModule } from './vote/vote.module'
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { QuoteModule } from './quote/quote.module'
     MeModule,
     AuthModule,
     QuoteModule,
+    VoteModule,
   ],
   controllers: [],
   providers: [],
