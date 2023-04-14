@@ -10,7 +10,7 @@ import { PostgresErrorCode } from 'helpers/postgresErrorCode.enum'
 import { compareHash, hash } from 'utils/bcrypt'
 
 @Injectable()
-export class UsersService extends AbstractService {
+export class MeService extends AbstractService {
   constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {
     super(userRepository)
   }

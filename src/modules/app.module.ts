@@ -3,8 +3,10 @@ import { ConfigModule } from '@nestjs/config'
 import { configValidationSchema } from 'config/schema.config'
 import { DatabaseModule } from './database/database.module'
 import { LoggerMiddleware } from 'middleware/logger.middleware'
-import { UsersModule } from './users/users.module'
+import { MeModule } from './me/me.module'
 import { AuthModule } from './auth/auth.module'
+import { QuoteModule } from './quote/quote.module'
+import { VoteModule } from './vote/vote.module'
 
 @Module({
   imports: [
@@ -14,8 +16,10 @@ import { AuthModule } from './auth/auth.module'
       validationSchema: configValidationSchema,
     }),
     DatabaseModule,
-    UsersModule,
+    MeModule,
     AuthModule,
+    QuoteModule,
+    VoteModule,
   ],
   controllers: [],
   providers: [],
