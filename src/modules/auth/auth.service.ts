@@ -17,6 +17,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     Logging.info('Validating user...')
+
     const user = await this.meService.findBy({ email: email })
     if (!user) {
       throw new BadRequestException('Invalida credentials')
@@ -30,6 +31,7 @@ export class AuthService {
   }
 
   async register(registerUserDto: RegisterUserDto): Promise<User> {
+    Logging.info(`Registrira uporanbika: ${registerUserDto.email}`)
     const hashedPassword: string = await hash(registerUserDto.password)
     return await this.meService.create({
       ...registerUserDto,

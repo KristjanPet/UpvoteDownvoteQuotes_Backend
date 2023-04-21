@@ -9,13 +9,16 @@ import { UpdateUserDto } from './Dto/update-user.dto'
 import { PostgresErrorCode } from 'helpers/postgresErrorCode.enum'
 import { compareHash, hash } from 'utils/bcrypt'
 import { AuthService } from 'modules/auth/auth.service'
+import { VoteService } from 'modules/vote/vote.service'
 
 @Injectable()
 export class MeService extends AbstractService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    // @Inject(forwardRef(() => AuthService))
+    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
+    @Inject(forwardRef(() => VoteService))
+    private readonly voteService: VoteService,
   ) {
     super(userRepository)
   }
@@ -63,5 +66,23 @@ export class MeService extends AbstractService {
   async updateUserImageId(id: string, avatar: string): Promise<User> {
     const user = await this.findById(id)
     return this.update(user.id, { avatar })
+  }
+
+  async getQuotesNumber(id: string): Promise<number> {
+    const user = await this.findById(id, ['quote'])
+    return user.quote.length
+  }
+
+  async getVotesNumber(id: string): Promise<number> {
+    try {
+      const user = await this.findById(id, ['quote'])
+      const votesPromises = user.quote.map((quoteId) => this.voteService.countVotes(quoteId.id))
+      const votes = await Promise.all(votesPromises)
+      const totalVotes = votes.reduce((total, vote) => total + vote, 0)
+      return totalVotes
+    } catch (error) {
+      Logging.error(error)
+      throw new BadRequestException('something went wrong while counting votes')
+    }
   }
 }

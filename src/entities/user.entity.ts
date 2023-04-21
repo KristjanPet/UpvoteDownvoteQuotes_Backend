@@ -18,7 +18,7 @@ export class User extends Base {
   @Column({ nullable: true })
   avatar: string
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   @Exclude()
   password: string
 

@@ -10,7 +10,8 @@ import { JwtService } from '@nestjs/jwt'
 import { Quote } from 'entities/quote.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Vote, Quote]), MeModule, forwardRef(() => QuoteModule)],
+  imports: [TypeOrmModule.forFeature([Vote, Quote]), forwardRef(() => MeModule), forwardRef(() => QuoteModule)],
   providers: [VoteService, QuoteService, AuthService, JwtService],
+  exports: [VoteService],
 })
 export class VoteModule {}

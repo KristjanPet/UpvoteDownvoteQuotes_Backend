@@ -132,4 +132,20 @@ export class MeController {
     const cookie = req.cookies['access_token']
     return this.quoteService.removeQuote(id, cookie)
   }
+
+  @ApiCreatedResponse({ description: 'Get number of quotes.' })
+  @ApiBadRequestResponse({ description: 'Error getting number of quotes' })
+  @Get(':id/quotes')
+  @HttpCode(HttpStatus.OK)
+  async countQuotes(@Param('id') id: string): Promise<number> {
+    return this.meService.getQuotesNumber(id)
+  }
+
+  @ApiCreatedResponse({ description: 'Get number of up & down votes.' })
+  @ApiBadRequestResponse({ description: 'Error getting number of up & down votes' })
+  @Get(':id/votes')
+  @HttpCode(HttpStatus.OK)
+  async countVotes(@Param('id') id: string): Promise<number> {
+    return this.meService.getVotesNumber(id)
+  }
 }

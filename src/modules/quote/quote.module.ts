@@ -11,7 +11,7 @@ import { VoteModule } from 'modules/vote/vote.module'
 import { Vote } from 'entities/vote.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Quote, Vote]), MeModule, forwardRef(() => VoteModule)],
+  imports: [TypeOrmModule.forFeature([Quote, Vote]), forwardRef(() => MeModule), forwardRef(() => VoteModule)],
   controllers: [QuoteController],
   providers: [QuoteService, AuthService, JwtService, VoteService],
   exports: [QuoteService],
