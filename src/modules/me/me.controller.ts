@@ -53,7 +53,7 @@ export class MeController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string): Promise<User> {
-    return this.meService.findById(id)
+    return this.meService.findById(id, ['quote'])
   }
 
   @ApiCreatedResponse({ description: 'Create a user.' })
