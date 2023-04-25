@@ -61,6 +61,18 @@ export class VoteService extends AbstractService {
     }
   }
 
+  async getLikedQuotes(userId: string): Promise<Quote[]> {
+    const votes = await this.repository.find({
+      where: {
+        user: { id: userId },
+        upDown: true,
+      },
+      relations: ['quote'], //MOGOČ POLEK ŠE AUTHOR
+    })
+
+    return votes.map((vote) => vote.quote)
+  }
+
   async countVotes(quoteId: string): Promise<number> {
     try {
       const allVotes = (await this.findAll(['user', 'quote'])) as Vote[]

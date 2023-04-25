@@ -36,16 +36,29 @@ export class QuoteController {
   @HttpCode(HttpStatus.OK)
   async findAll(): Promise<{ quote: Quote; votes: number }[]> {
     const allQuotes = await this.quoteService.findAll(['author'])
+    return await this.quoteService.sortByVotes(allQuotes)
+  }
 
-    const quoteWithVotes = await Promise.all(
-      allQuotes.map(async (quote) => {
-        const votes = await this.voteService.countVotes(quote.id)
-        return { quote, votes }
-      }),
-    )
-    quoteWithVotes.sort((a, b) => b.votes - a.votes)
+  @ApiCreatedResponse({ description: 'All Quotes by sorted recent.' })
+  @ApiBadRequestResponse({ description: 'Error for quote sorted recent' })
+  @Public()
+  @Get('/recent')
+  @HttpCode(HttpStatus.OK)
+  async findAllRecent(): Promise<{ quote: Quote[] }> {
+    // console.log(await this.voteService.countVotes(id));
+    const quotes = await this.quoteService.findAllRecentQuotes()
+    const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
+    const voteNum = await Promise.all(voteNumPromises)
 
-    return quoteWithVotes
+    const quotesWithVoteNum = quotes.map((quote, index) => {
+      //PREMAKNI V SERVICE
+      return {
+        ...quote,
+        voteNum: voteNum[index],
+      }
+    })
+
+    return { quote: quotesWithVoteNum }
   }
 
   @ApiCreatedResponse({ description: 'Quote by id.' })
@@ -59,6 +72,54 @@ export class QuoteController {
     const voteNum = await this.voteService.countVotes(id)
 
     return { quote, voteNum }
+  }
+
+  @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
+  @ApiBadRequestResponse({ description: 'Error for quote by UserId sorted recent' })
+  @Public()
+  @Get(':id/recent')
+  @HttpCode(HttpStatus.OK)
+  async findRecentByUserId(@Param('id') userId: string): Promise<{ quote: Quote[] }> {
+    // console.log(await this.voteService.countVotes(id));
+    const quotes = await this.quoteService.findRecentQuotesByAuthor(userId)
+    const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
+    const voteNum = await Promise.all(voteNumPromises)
+
+    const quotesWithVoteNum = quotes.map((quote, index) => {
+      //PREMAKNI V SERVICE
+      return {
+        ...quote,
+        voteNum: voteNum[index],
+      }
+    })
+
+    return { quote: quotesWithVoteNum }
+  }
+
+  @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
+  @ApiBadRequestResponse({ description: 'Error for quote by UserId sorted recent' })
+  @Public()
+  @Get(':id/mostliked')
+  @HttpCode(HttpStatus.OK)
+  async findMostLikedByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
+    // console.log(await this.voteService.countVotes(id));
+    const quotes = await this.quoteService.findRecentQuotesByAuthor(userId)
+    const sortedQuotes = await this.quoteService.sortByVotes(quotes)
+
+    return sortedQuotes
+  }
+
+  @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
+  @ApiBadRequestResponse({ description: 'Error for quote by UserId sorted recent' })
+  @Public()
+  @Get(':id/liked')
+  @HttpCode(HttpStatus.OK)
+  async findLikedQuotesByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
+    // console.log(await this.voteService.countVotes(id));
+    const quotes = await this.quoteService.findLikedQuotesByUserId(userId)
+    const sortedQuotes = await this.quoteService.sortByVotes(quotes)
+
+    return sortedQuotes
   }
 
   @ApiCreatedResponse({ description: 'Up vote quote by id.' })
