@@ -19,6 +19,7 @@ import { Public } from 'decorators/public.decorator'
 import { Request, Response } from 'express'
 import { VoteService } from 'modules/vote/vote.service'
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiTags } from '@nestjs/swagger/dist/index'
+import { Vote } from 'entities/vote.entity'
 
 @ApiTags('Quotes')
 @Controller('quotes')
@@ -79,21 +80,13 @@ export class QuoteController {
   @Public()
   @Get(':id/recent')
   @HttpCode(HttpStatus.OK)
-  async findRecentByUserId(@Param('id') userId: string): Promise<{ quote: Quote[] }> {
+  async findRecentByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
     // console.log(await this.voteService.countVotes(id));
-    const quotes = await this.quoteService.findRecentQuotesByAuthor(userId)
-    const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
-    const voteNum = await Promise.all(voteNumPromises)
+    const quote = await this.quoteService.findRecentQuotesByAuthor(userId)
+    const voteNumPromises = await quote.map((quote) => this.voteService.countVotes(quote.id))
+    const votes = await Promise.all(voteNumPromises)
 
-    const quotesWithVoteNum = quotes.map((quote, index) => {
-      //PREMAKNI V SERVICE
-      return {
-        ...quote,
-        voteNum: voteNum[index],
-      }
-    })
-
-    return { quote: quotesWithVoteNum }
+    return quote.map((quote, index) => ({ quote, votes: votes[index] }))
   }
 
   @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
@@ -126,7 +119,7 @@ export class QuoteController {
   @ApiBadRequestResponse({ description: 'Error up voting quote' })
   @Post(':id/upvote')
   @HttpCode(HttpStatus.OK)
-  async upVote(@Param('id') id: string, @Req() req: Request): Promise<Quote> {
+  async upVote(@Param('id') id: string, @Req() req: Request): Promise<{ quote: Quote }> {
     // console.log(req.cookies['access_token']);
 
     const cookie = req.cookies['access_token']
@@ -137,10 +130,24 @@ export class QuoteController {
   @ApiBadRequestResponse({ description: 'Error down voting quote' })
   @Post(':id/downvote')
   @HttpCode(HttpStatus.OK)
-  async downVote(@Param('id') id: string, @Req() req: Request): Promise<Quote> {
+  async downVote(@Param('id') id: string, @Req() req: Request): Promise<{ quote: Quote }> {
     // console.log(req.cookies['access_token']);
 
     const cookie = req.cookies['access_token']
     return this.voteService.vote(id, cookie, false)
+  }
+
+  @ApiCreatedResponse({ description: 'check for vote.' })
+  @ApiBadRequestResponse({ description: 'Error checking for vote' })
+  @Get(':id/check')
+  @HttpCode(HttpStatus.OK)
+  async checkVote(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<{ isAuthor: boolean; didVote?: boolean; upDown?: boolean; vote?: Vote }> {
+    // console.log(req.cookies['access_token']);
+
+    const cookie = req.cookies['access_token']
+    return this.voteService.checkVote(id, cookie)
   }
 }

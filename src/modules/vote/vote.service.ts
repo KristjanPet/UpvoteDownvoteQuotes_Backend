@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, forwardRef } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Quote } from 'entities/quote.entity'
+import { User } from 'entities/user.entity'
 import { Vote } from 'entities/vote.entity'
 import Logging from 'library/Logging'
 import { AuthService } from 'modules/auth/auth.service'
@@ -19,31 +20,31 @@ export class VoteService extends AbstractService {
     super(voteRepository)
   }
 
-  async vote(quoteId: string, cookie: string, upDown: boolean): Promise<Quote> {
+  async vote(quoteId: string, cookie: string, upDown: boolean): Promise<{ quote: Quote }> {
     try {
-      const allVotes = (await this.findAll(['user', 'quote'])) as Vote[]
       const user = await this.authService.user(cookie)
       const quote = await this.quoteService.findById(quoteId, ['author'])
+      const info = await this.checkVote(quoteId, cookie)
       // console.log(quote);
       // console.log(user);
       // console.log("---------------------------------");
       // console.log(quote.author);
 
-      const newVote = this.voteRepository.create({ upDown, user, quote })
+      // const newVote = this.voteRepository.create({ upDown, user, quote })
       // console.log(allVotes);
-      if (quote.author.id === user.id) {
+      if (info.isAuthor) {
         throw new BadRequestException('Cant vote for your quote')
       }
 
-      const existingVote = allVotes.find((val) => val.user.id === user.id && val.quote.id === quoteId)
+      // const existingVote = allVotes.find((val) => val.user.id === user.id && val.quote.id === quoteId)
 
-      if (existingVote) {
+      if (info.didVote) {
         //cheks if user already voted
-        if (existingVote.upDown === upDown) {
+        if (info.upDown === upDown) {
           throw new BadRequestException('User already voted for this quote')
         } else {
           //if ge changed the vote
-          this.voteRepository.update(existingVote.id, newVote)
+          this.voteRepository.update(info.vote.id, { upDown })
           Logging.warn(`Vote changed to: ${upDown}`)
           return quote
         }
@@ -53,11 +54,39 @@ export class VoteService extends AbstractService {
       // console.log(user);
       // console.log(newVote);
       // console.log("SPET USTVAR NOUGA");
+      const newVote = this.voteRepository.create({ upDown, user, quote })
       this.voteRepository.save(newVote)
-      return quote
+      return { quote }
     } catch (error) {
       Logging.error(error)
       throw new BadRequestException('something went wrong while voting')
+    }
+  }
+
+  async checkVote(
+    quoteId: string,
+    cookie: string,
+  ): Promise<{ isAuthor: boolean; didVote?: boolean; upDown?: boolean; vote?: Vote }> {
+    try {
+      const allVotes = (await this.findAll(['user', 'quote'])) as Vote[]
+      const user = await this.authService.user(cookie)
+      const quote = await this.quoteService.findById(quoteId, ['author'])
+
+      if (quote.author.id === user.id) {
+        return { isAuthor: true }
+      }
+
+      const existingVote = allVotes.find((val) => val.user.id === user.id && val.quote.id === quote.id)
+
+      if (existingVote) {
+        //cheks if user already voted
+        return { isAuthor: false, didVote: true, upDown: existingVote.upDown, vote: existingVote }
+      } else {
+        return { isAuthor: false, didVote: false }
+      }
+    } catch (error) {
+      Logging.error(error)
+      throw new BadRequestException('something went wrong while checking for vote')
     }
   }
 
@@ -67,7 +96,7 @@ export class VoteService extends AbstractService {
         user: { id: userId },
         upDown: true,
       },
-      relations: ['quote'], //MOGOČ POLEK ŠE AUTHOR
+      relations: ['quote', 'quote.author'], //MOGOČ POLEK ŠE AUTHOR
     })
 
     return votes.map((vote) => vote.quote)

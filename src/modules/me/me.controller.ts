@@ -103,6 +103,17 @@ export class MeController {
     return this.meService.update(cookie, updateUserDto)
   }
 
+  @ApiCreatedResponse({ description: 'Update users info.' })
+  @ApiBadRequestResponse({ description: 'Error updating users info' })
+  @Patch('/update-user')
+  @HttpCode(HttpStatus.OK)
+  async updateUser(@Body() updateUserDto: UpdateUserDto, @Req() req: Request): Promise<User> {
+    const cookie = req.cookies['access_token']
+    console.log(updateUserDto)
+
+    return this.meService.update(cookie, updateUserDto)
+  }
+
   @ApiCreatedResponse({ description: 'Update users quote.' })
   @ApiBadRequestResponse({ description: 'Error updating users quote' })
   @Patch('/quotes/:id')
