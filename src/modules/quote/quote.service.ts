@@ -82,15 +82,32 @@ export class QuoteService extends AbstractService {
     return quoteWithVotes
   }
 
+  async getRandomQuote(): Promise<{ quote: Quote; votes: number }> {
+    try {
+      const allQuotes = await this.quoteRepository.find({
+        relations: ['author'],
+      })
+
+      // Get a random quote
+      const randomQuote = allQuotes[Math.floor(Math.random() * allQuotes.length)]
+
+      // Sort the quote by votes
+      const sortedQuote = await this.sortByVotes([randomQuote])
+
+      return sortedQuote[0]
+    } catch (error) {
+      Logging.error(error)
+      throw new InternalServerErrorException('Something went wrong while getting a random quote sorted by votes')
+    }
+  }
+
   async findRecentQuotesByAuthor(userId: string): Promise<Quote[]> {
     try {
-      const quotes = await this.repository.find({
+      return this.quoteRepository.find({
         where: { author: { id: userId } },
         relations: ['author'],
         order: { created_at: 'DESC' },
       })
-
-      return quotes
     } catch (error) {
       Logging.error(error)
       throw new InternalServerErrorException('Something went wrong while searching for quotes by author')
@@ -99,7 +116,7 @@ export class QuoteService extends AbstractService {
 
   async findAllRecentQuotes(): Promise<Quote[]> {
     try {
-      const quotes = await this.repository.find({
+      const quotes = await this.quoteRepository.find({
         relations: ['author'],
         order: { created_at: 'DESC' },
       })

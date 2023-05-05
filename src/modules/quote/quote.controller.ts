@@ -43,7 +43,7 @@ export class QuoteController {
   @ApiCreatedResponse({ description: 'All Quotes by sorted recent.' })
   @ApiBadRequestResponse({ description: 'Error for quote sorted recent' })
   @Public()
-  @Get('/recent')
+  @Get('/recent/get')
   @HttpCode(HttpStatus.OK)
   async findAllRecent(): Promise<{ quote: Quote[] }> {
     // console.log(await this.voteService.countVotes(id));
@@ -73,6 +73,16 @@ export class QuoteController {
     const voteNum = await this.voteService.countVotes(id)
 
     return { quote, voteNum }
+  }
+
+  @ApiCreatedResponse({ description: 'Get random quote.' })
+  @ApiBadRequestResponse({ description: 'Error getting random quote' })
+  @Public()
+  @Get('/random/get')
+  @HttpCode(HttpStatus.OK)
+  async findRandomQuote(): Promise<{ quote: Quote; votes: number }> {
+    // console.log(await this.voteService.countVotes(id));
+    return await this.quoteService.getRandomQuote()
   }
 
   @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
