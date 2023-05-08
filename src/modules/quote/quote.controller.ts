@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
   forwardRef,
@@ -20,6 +21,7 @@ import { Request, Response } from 'express'
 import { VoteService } from 'modules/vote/vote.service'
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiTags } from '@nestjs/swagger/dist/index'
 import { Vote } from 'entities/vote.entity'
+import { PaginatedResult } from 'interfaces/paginated-result.interface'
 
 @ApiTags('Quotes')
 @Controller('quotes')
@@ -35,9 +37,8 @@ export class QuoteController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<{ quote: Quote; votes: number }[]> {
-    const allQuotes = await this.quoteService.findAll(['author'])
-    return await this.quoteService.sortByVotes(allQuotes)
+  async findAll(@Query('page') page: number): Promise<{ quote: Quote; votes: number }[]> {
+    return await this.quoteService.findAllPaginated(page)
   }
 
   @ApiCreatedResponse({ description: 'All Quotes by sorted recent.' })
@@ -45,21 +46,9 @@ export class QuoteController {
   @Public()
   @Get('/recent/get')
   @HttpCode(HttpStatus.OK)
-  async findAllRecent(): Promise<{ quote: Quote[] }> {
+  async findAllRecent(@Query('page') page: number): Promise<{ quote: Quote; votes: number }[]> {
     // console.log(await this.voteService.countVotes(id));
-    const quotes = await this.quoteService.findAllRecentQuotes()
-    const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
-    const voteNum = await Promise.all(voteNumPromises)
-
-    const quotesWithVoteNum = quotes.map((quote, index) => {
-      //PREMAKNI V SERVICE
-      return {
-        ...quote,
-        voteNum: voteNum[index],
-      }
-    })
-
-    return { quote: quotesWithVoteNum }
+    return await this.quoteService.findAllRecentQuotes(page)
   }
 
   @ApiCreatedResponse({ description: 'Quote by id.' })
@@ -90,26 +79,25 @@ export class QuoteController {
   @Public()
   @Get(':id/recent')
   @HttpCode(HttpStatus.OK)
-  async findRecentByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
+  async findRecentByUserId(
+    @Param('id') userId: string,
+    @Query('page') page: number,
+  ): Promise<{ quote: Quote; votes: number }[]> {
     // console.log(await this.voteService.countVotes(id));
-    const quote = await this.quoteService.findRecentQuotesByAuthor(userId)
-    const voteNumPromises = await quote.map((quote) => this.voteService.countVotes(quote.id))
-    const votes = await Promise.all(voteNumPromises)
-
-    return quote.map((quote, index) => ({ quote, votes: votes[index] }))
+    return await this.quoteService.findRecentQuotesByAuthor(userId, page)
   }
 
-  @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
-  @ApiBadRequestResponse({ description: 'Error for quote by UserId sorted recent' })
+  @ApiCreatedResponse({ description: 'Quotes by UserId sorted most liked.' })
+  @ApiBadRequestResponse({ description: 'Error for quote by UserId sorted most liked' })
   @Public()
   @Get(':id/mostliked')
   @HttpCode(HttpStatus.OK)
-  async findMostLikedByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
+  async findMostLikedByUserId(
+    @Param('id') userId: string,
+    @Query('page') page: number,
+  ): Promise<{ quote: Quote; votes: number }[]> {
     // console.log(await this.voteService.countVotes(id));
-    const quotes = await this.quoteService.findRecentQuotesByAuthor(userId)
-    const sortedQuotes = await this.quoteService.sortByVotes(quotes)
-
-    return sortedQuotes
+    return await this.quoteService.findMostLikedQuotesByAuthor(userId, page)
   }
 
   @ApiCreatedResponse({ description: 'Quotes by UserId sorted recent.' })
@@ -117,12 +105,12 @@ export class QuoteController {
   @Public()
   @Get(':id/liked')
   @HttpCode(HttpStatus.OK)
-  async findLikedQuotesByUserId(@Param('id') userId: string): Promise<{ quote: Quote; votes: number }[]> {
+  async findLikedQuotesByUserId(
+    @Param('id') userId: string,
+    @Query('page') page: number,
+  ): Promise<{ quote: Quote; votes: number }[]> {
     // console.log(await this.voteService.countVotes(id));
-    const quotes = await this.quoteService.findLikedQuotesByUserId(userId)
-    const sortedQuotes = await this.quoteService.sortByVotes(quotes)
-
-    return sortedQuotes
+    return await this.quoteService.findLikedQuotesByUserId(userId, page)
   }
 
   @ApiCreatedResponse({ description: 'Up vote quote by id.' })

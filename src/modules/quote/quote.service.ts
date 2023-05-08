@@ -21,6 +21,17 @@ export class QuoteService extends AbstractService {
     super(quoteRepository)
   }
 
+  async findAllPaginated(page: number): Promise<{ quote: Quote; votes: number }[]> {
+    try {
+      const allQuotes = await this.findAll(['author'])
+      const allQuotesWithVotes = await this.sortByVotes(allQuotes)
+      return allQuotesWithVotes.slice(0, page * 9)
+    } catch (error) {
+      Logging.error(error)
+      throw new InternalServerErrorException('something went wrong while searching for all')
+    }
+  }
+
   async create(createQuoteDto: CreateQuoteDto, cookie: string): Promise<Quote> {
     try {
       // console.log(cookie);
@@ -101,38 +112,68 @@ export class QuoteService extends AbstractService {
     }
   }
 
-  async findRecentQuotesByAuthor(userId: string): Promise<Quote[]> {
+  async findRecentQuotesByAuthor(userId: string, page: number): Promise<{ quote: Quote; votes: number }[]> {
     try {
-      return this.quoteRepository.find({
+      const quotes = await this.quoteRepository.find({
         where: { author: { id: userId } },
         relations: ['author'],
         order: { created_at: 'DESC' },
+        take: page * 4,
       })
+      const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
+      const votes = await Promise.all(voteNumPromises)
+
+      return quotes.map((quote, index) => ({ quote, votes: votes[index] }))
     } catch (error) {
       Logging.error(error)
       throw new InternalServerErrorException('Something went wrong while searching for quotes by author')
     }
   }
 
-  async findAllRecentQuotes(): Promise<Quote[]> {
+  async findAllRecentQuotes(page: number): Promise<{ quote: Quote; votes: number }[]> {
     try {
       const quotes = await this.quoteRepository.find({
         relations: ['author'],
         order: { created_at: 'DESC' },
+        take: page * 9,
+      })
+      const voteNumPromises = await quotes.map((quote) => this.voteService.countVotes(quote.id))
+      const voteNum = await Promise.all(voteNumPromises)
+      const quotesWithVoteNum = quotes.map((quote, index) => {
+        return {
+          quote,
+          votes: voteNum[index],
+        }
       })
 
-      return quotes
+      return quotesWithVoteNum
     } catch (error) {
       Logging.error(error)
       throw new InternalServerErrorException('Something went wrong while searching for quotes sorted recent')
     }
   }
 
-  async findLikedQuotesByUserId(userId: string): Promise<Quote[]> {
+  async findMostLikedQuotesByAuthor(userId: string, page: number): Promise<{ quote: Quote; votes: number }[]> {
+    try {
+      const quotes = await this.quoteRepository.find({
+        where: { author: { id: userId } },
+        relations: ['author'],
+      })
+      const allQuotesWithVotes = await this.sortByVotes(quotes)
+
+      return allQuotesWithVotes.slice(0, page * 4)
+    } catch (error) {
+      Logging.error(error)
+      throw new InternalServerErrorException('Something went wrong while searching for quotes by author')
+    }
+  }
+
+  async findLikedQuotesByUserId(userId: string, page: number): Promise<{ quote: Quote; votes: number }[]> {
     try {
       const quotes = await this.voteService.getLikedQuotes(userId)
+      const sortedQuotes = await this.sortByVotes(quotes)
 
-      return quotes
+      return sortedQuotes.slice(0, page * 4)
     } catch (error) {
       Logging.error(error)
       throw new InternalServerErrorException('Something went wrong while searching for quotes by author')
