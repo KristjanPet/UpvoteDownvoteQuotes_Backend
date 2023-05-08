@@ -25,13 +25,7 @@ export class VoteService extends AbstractService {
       const user = await this.authService.user(cookie)
       const quote = await this.quoteService.findById(quoteId, ['author'])
       const info = await this.checkVote(quoteId, cookie)
-      // console.log(quote);
-      // console.log(user);
-      // console.log("---------------------------------");
-      // console.log(quote.author);
 
-      // const newVote = this.voteRepository.create({ upDown, user, quote })
-      // console.log(allVotes);
       if (info.isAuthor) {
         throw new BadRequestException('Cant vote for your quote')
       }
@@ -41,7 +35,9 @@ export class VoteService extends AbstractService {
       if (info.didVote) {
         //cheks if user already voted
         if (info.upDown === upDown) {
-          throw new BadRequestException('User already voted for this quote')
+          Logging.warn(`Vote removed`)
+          this.voteRepository.remove(info.vote)
+          return
         } else {
           //if ge changed the vote
           this.voteRepository.update(info.vote.id, { upDown })
@@ -50,12 +46,9 @@ export class VoteService extends AbstractService {
         }
       }
 
-      // console.log(cookie);
-      // console.log(user);
-      // console.log(newVote);
-      // console.log("SPET USTVAR NOUGA");
       const newVote = this.voteRepository.create({ upDown, user, quote })
       this.voteRepository.save(newVote)
+      Logging.warn(`New vote created`)
       return { quote }
     } catch (error) {
       Logging.error(error)
