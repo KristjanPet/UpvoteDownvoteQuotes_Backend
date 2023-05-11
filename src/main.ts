@@ -19,6 +19,12 @@ async function bootstrap() {
 
   app.use('/files', express.static('files'))
 
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://main--gorgeous-choux-422275.netlify.app/')
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+    next()
+  })
+
   //setup swagger
   const config = new DocumentBuilder()
     .setTitle('Upvote/Downvote Quotes API')
