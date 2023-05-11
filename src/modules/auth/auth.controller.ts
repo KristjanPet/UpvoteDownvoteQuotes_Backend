@@ -43,7 +43,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<User> {
     const access_token = await this.authService.generateJwt(req.user)
-    res.cookie('access_token', access_token, { httpOnly: true })
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production' ? true : false,
+      expires: new Date(Date.now() + 3600 * 1000 * 24 * 30 * 1),
+    })
     return req.user
   }
 
