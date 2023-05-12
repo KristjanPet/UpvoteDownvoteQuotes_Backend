@@ -11,7 +11,7 @@ async function bootstrap() {
     bufferLogs: true,
   })
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://main--gorgeous-choux-422275.netlify.app/'],
+    origin: ['http://localhost:3000', 'https://upvote-downvote-quotes-frontend.vercel.app'],
     credentials: true,
   })
   app.useGlobalPipes(new ValidationPipe())
