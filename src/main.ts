@@ -11,7 +11,7 @@ async function bootstrap() {
     bufferLogs: true,
   })
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:3000', 'https://upvote-downvote-quotes-frontend-pzdtodfoz-kristjanpet.vercel.app'],
     credentials: true,
   })
   app.useGlobalPipes(new ValidationPipe())
