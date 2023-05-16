@@ -19,7 +19,8 @@ export class CreateUserDto {
   @ApiProperty({ required: true })
   @IsNotEmpty()
   @Matches(/^(?=.*\d)[A-Za-z.\s_-]+[\w~@#$%^&*+=`|{}:;!.?"()[\]-]{6,}/, {
-    message: 'password must have at least one number and one upper case letter and longer than 5 char',
+    message:
+      'Password must have at least one number, lower or upper case letter and it has to be longer than 5 characters.',
   })
   password: string
 

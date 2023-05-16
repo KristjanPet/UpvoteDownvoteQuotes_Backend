@@ -11,7 +11,8 @@ export class UpdateUserDto {
   @IsOptional()
   @ApiProperty({ required: false })
   @Matches(/^(?=.*\d)[A-Za-z.\s_-]+[\w~@#$%^&*+=`|{}:;!.?"()[\]-]{6,}/, {
-    message: 'password must have at least one number and stuff',
+    message:
+      'Password must have at least one number, lower or upper case letter and it has to be longer than 5 characters.',
   })
   password?: string
 
